@@ -1,0 +1,51 @@
+
+# Import python modules
+# ---------------------
+import os
+import json
+
+# Function to load JSON files
+# ---------------------------
+def load_json(file_path):
+    with open(file_path, "r") as file:
+        return json.load(file)
+
+# Assign environment variables
+# ----------------------------
+globals().update(load_json("../environment_path.json"))
+
+
+# Configuration
+# -------------
+configfile: "analyse.json"
+configfile: "assemblies.json"
+
+
+# List of assemblies
+# ------------------
+ACCESSNB = config["assembly_list"]
+nb_spec = len(ACCESSNB)
+print("Nb of species  = "+str(nb_spec))
+# Rules
+# -----
+
+# -----------------------------------------------
+# all : inputs define the to be files generated . 
+# -----------------------------------------------
+rule all:
+    input:"toto"
+
+rule concatenate_proteome:
+    """
+    Concatenate proteomes
+    """    
+    input:
+        "tata"
+    output:
+        concat="toto"
+    shell:
+        """
+        echo ACCESSNB &&
+        cat {input} > {output.concat}
+        """ 
+
