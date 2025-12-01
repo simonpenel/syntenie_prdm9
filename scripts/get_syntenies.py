@@ -138,16 +138,16 @@ def processGff(gff:str):
                             cds_gene_id = ref[1]
                             flag_gene = 1
                             
-                if flag_gene == 0 :
-                    print("Warning : No gene")    
-                if flag_prot == 0 :
-                    print("Warning : No protein")                      
-                if cds_gene_id == "none":
-                    print("WARNING: Unable to get gene id : ")
-                    print(cds_info)
-                if prot_name == "none":
-                    print("WARNING: Unable to get protein name : ")
-                    print(cds_info)
+                # if flag_gene == 0 :
+                #     print("Warning : No gene")    
+                # if flag_prot == 0 :
+                    # print("Warning : No protein")                      
+                # if cds_gene_id == "none":
+                    # print("WARNING: Unable to get gene id : ")
+                    # print(cds_info)
+                # if prot_name == "none":
+                    # print("WARNING: Unable to get protein name : ")
+                    # print(cds_info)
                 if prot_name != "none" and cds_gene_id != "none":
                     if not prot_name in dico_prot:
                         if  cds_gene_id in dico_gene:
@@ -215,7 +215,11 @@ for chromo in dico_chromo_direct:
             proteins.append(prot_names)
             for prot_name in prot_names:
                 logfile.write(prot_name+", ")
-                dico_prot_position[prot_name] = [chromo, "+",position]
+                if prot_name in dico_prot_position:
+                    print("\nWARNING: "+prot_name+" HAS ALREADY AN ASSOCIATED CONTIG.\n")
+                    logfile.write("\nWARNING: "+prot_name+" HAS ALREADY AN ASSOCIATED CONTIG.\n")
+                else:
+                    dico_prot_position[prot_name] = [chromo, "+",position]
             position += 1
 
         else :
@@ -283,9 +287,11 @@ with open(args.input, 'r') as reader:
             logfile.write(str(dico_prot_position[prot_name]))
             logfile.write("\n")
             info_synt = dico_prot_position[prot_name]
+
             chromo = info_synt[0]
             strand = info_synt[1]
             pos = info_synt[2]
+            print("debug "+prot_name + " => "+ chromo + " "+strand )
             if strand == "+":
                 synteny = dico_chromo_direct_proteins[chromo]
                 # check 
@@ -303,12 +309,9 @@ with open(args.input, 'r') as reader:
                         logfile.write("Pos "+str(voisin) +" ")
                         logfile.write(str(synteny[voisin]))
                         for protein_voisine in synteny[voisin]:
-                            print("Proteine voisine "+protein_voisine)
                             if protein_voisine in dico_cluster:
                                 associated_family = dico_cluster[protein_voisine][0]
-                                print("Famille =  "+dico_cluster[protein_voisine][0])
                             else:
-                                print("Pas de famille")   
                                 associated_family = "NO FAMILY"
                             if not associated_family in associated_families :
                                 associated_families.append(associated_family)
@@ -325,12 +328,9 @@ with open(args.input, 'r') as reader:
                         logfile.write("Pos "+str(voisin) +" ")
                         logfile.write(str(synteny[voisin]))
                         for protein_voisine in synteny[voisin]:
-                            print("Proteine voisine "+protein_voisine)
                             if protein_voisine in dico_cluster:
                                 associated_family = dico_cluster[protein_voisine][0]
-                                print("Famille =  "+dico_cluster[protein_voisine][0])
                             else:
-                                print("Pas de famille")   
                                 associated_family = "NO FAMILY"
                             if not associated_family in associated_families :
                                 associated_families.append(associated_family)
@@ -357,12 +357,9 @@ with open(args.input, 'r') as reader:
                         logfile.write("Pos "+str(voisin) +" ")
                         logfile.write(str(synteny[voisin]))
                         for protein_voisine in synteny[voisin]:
-                            print("Proteine voisine "+protein_voisine)
                             if protein_voisine in dico_cluster:
                                 associated_family = dico_cluster[protein_voisine][0]
-                                print("Famille =  "+dico_cluster[protein_voisine][0])
                             else:
-                                print("Pas de famille")   
                                 associated_family = "NO FAMILY"
                             if not associated_family in associated_families :
                                 associated_families.append(associated_family)
@@ -379,12 +376,9 @@ with open(args.input, 'r') as reader:
                         logfile.write("Pos "+str(voisin) +" ")
                         logfile.write(str(synteny[voisin]))
                         for protein_voisine in synteny[voisin]:
-                            print("Proteine voisine "+protein_voisine)
                             if protein_voisine in dico_cluster:
                                 associated_family = dico_cluster[protein_voisine][0]
-                                print("Famille =  "+dico_cluster[protein_voisine][0])
                             else:
-                                print("Pas de famille")   
                                 associated_family = "NO FAMILY"
                             if not associated_family in associated_families :
                                 associated_families.append(associated_family)
@@ -397,16 +391,13 @@ with open(args.input, 'r') as reader:
             outfile.write(prot_name)
             
             for family in left_families :
-                print("\nleft families")
                 nbspec_max = 0
                 nbseq_max = 0
                 selected_family = family[0]
                 for fam in family:
-                    print("debug "+fam)
                     if fam != "NO FAMILY" and fam != "NO DATA" :
                         if fam in dico_stats:
                             stats = dico_stats[fam]
-                            print(stats)
                             nbseq = stats[0]
                             nbspec = stats[1]
                             if nbspec > nbspec_max :
@@ -416,19 +407,15 @@ with open(args.input, 'r') as reader:
                             elif nbspec == nbspec_max and nbseq > nbseq_max :
                                 selected_family = fam
                                 nbseq_max = nbseq
-                    print("Selected = "+ selected_family)
                 outfile.write(";"+selected_family)
             for family in right_families :
-                print("\nright families")
                 nbspec_max = 0
                 nbseq_max = 0
                 selected_family = family[0]
                 for fam in family:
-                    print("debug "+fam)
                     if fam != "NO FAMILY" and fam != "NO DATA" :
                         if fam in dico_stats:
                             stats = dico_stats[fam]
-                            print(stats)
                             nbseq = stats[0]
                             nbspec = stats[1]
                             if nbspec > nbspec_max :
@@ -438,7 +425,6 @@ with open(args.input, 'r') as reader:
                             elif nbspec == nbspec_max and nbseq > nbseq_max :
                                 selected_family = fam
                                 nbseq_max = nbseq
-                    print("Selected = "+ selected_family)
                 outfile.write(";"+selected_family) 
             outfile.write("\n")
 
