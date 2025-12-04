@@ -171,6 +171,7 @@ def processExonsGff(gff:str):
                     fwarn.write(cds_info)
                 if prot_name != "none" and cds_gene_id != "none":
                     parent = dico_gene[cds_gene_id]
+                    parent = cds_gene_id
                     if prot_name in dico_prot:
                         dico_prot[prot_name].append([contig,parent])
                     else :
@@ -190,7 +191,7 @@ f = open(args.output, "w")
 ferr = open(args.output+".ERROR", "w")
 # log file
 fwarn = open(args.output+".warnings", "w")
-f.write("Accession;SeqID;Contig;Gene;Start;End;Strand\n")
+f.write("Accession;SeqID;Contig;Gene Name;GeneID;Start;End;Strand\n")
 
 
 
@@ -218,6 +219,7 @@ for seqid in dico_prot.keys():
         #print(contig_mrna)
         contig = contig_mrna[0]
         mrna = contig_mrna[1]
+        gene_name = dico_gene[mrna]
         cds_pos = dico_cds_pos[(contig,mrna)]
         #print(len(cds_pos))
         strand = cds_pos[0][2]
@@ -229,7 +231,7 @@ for seqid in dico_prot.keys():
             first = cds_pos[len(cds_pos)-1][0]
         else:
             sys.exit(1)
-        f.write(args.accession+";"+seqid+";"+contig+";"+mrna+";"+str(first)+";"+str(last)+";"+strand+"\n")
+        f.write(args.accession+";"+seqid+";"+contig+";"+gene_name+";"+mrna+";"+str(first)+";"+str(last)+";"+strand+"\n")
         #print(cds_pos[0])
         #print(cds_pos[len(cds_pos)-1])
         #print(str(first)+":"+str(last))
