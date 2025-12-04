@@ -59,10 +59,11 @@ rule get_syntenies:
         fam_stat_csv="concatenated_proteomes_fam_nb_seq_species.csv",
         summary = pathGTDriftData
         + "genome_assembly/{accession}/analyses/"+PROTEIN_RESOURCES_DIR_NAME + "whole_summary.csv",
-        gff = pathGTDriftData + "genome_assembly/{accession}/annotation/genomic.gff", 
+        #gff = pathGTDriftData + "genome_assembly/{accession}/annotation/genomic.gff", 
+        positions = "analyse_gff/analyse.{accession}.csv"
     output:
         "syntenie/{accession}/synteny.csv",
     shell:
         """
-        python3 ../scripts/get_syntenies.py  -i {input.summary}  -g {input.gff} -s {input.fam_stat_csv} -c {input.famfile_csv} -o {output}
+        python3 ../scripts/get_syntenies.py  -i {input.summary}  -p {input.positions} -s {input.fam_stat_csv} -c {input.famfile_csv} -o {output}
         """        
