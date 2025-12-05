@@ -37,7 +37,7 @@ def fun_prot_2_fam(dico, proteins):
         if protein in dico :
             family  = dico[protein]
         else :
-            family = ["NO FAM", 0, 0]
+            family = ["NO FAMILY", 0, 0]
         families.append(family)
     return(families)
 
@@ -59,9 +59,16 @@ def fun_largest_families(families):
         if family[2] > largest_family[2]:
             largest_family  = family
         if (family[2] == largest_family[2])  and (family[1] < largest_family[1]):
-            largest_family  = family           
+            largest_family  = family               
     return(largest_family[0])    
 
+def genes_2_families(genes,dico_gene_2_proteins,dico_cluster):
+    proteins = list(map(lambda x: fun_gene_2_prot(dico_gene_2_proteins,x), genes))
+    families = list(map(lambda x: fun_prot_2_fam(dico_cluster,x), proteins))
+    unique_families = list(map(fun_unique_families, families))
+    largest_families = list(map(fun_largest_families, unique_families))
+    return(largest_families)
+    
 
 def processCluster(fcluster:str):
     #df_cluster = pd.read_csv(fcluster, sep=';',header=None,names=["Family","SeqID"])
@@ -80,12 +87,9 @@ def processPositions(gff:str,
     dico_prot_2_gene,
     dico_contig_2_synteny,
     dico_contig_2_indexes,
-    dico_gene_2_proteins
+    dico_gene_2_proteins,
+    dico_geneid_2genename
     ):
-    # dico_prot_2_contig = {}  # prot name -> contig ( on ne gadre que le 1er contig)
-    # dico_prot_2_gene = {}    # prot_name -> gene_id
-    # dico_contig_2_synteny = {} # contig -> arrayf of genes
-    # dico_contig_2_indexes = {} # contig -> dico gene-> index in array
     with open(gff, 'r') as reader:
         lines = reader.readlines()[1:]
         for line in lines:
@@ -95,14 +99,21 @@ def processPositions(gff:str,
             contig = info[2]
             gene_name = info[3]
             gene_id = info[4]
+            if not gene_id in dico_geneid_2genename:
+                dico_geneid_2genename[gene_id] = gene_name
+            else :
+                if dico_geneid_2genename[gene_id] != gene_name :
+                    sys.exit("Error in gene names")
             dico_prot_2_gene[prot_name] = gene_id
             if not gene_id in dico_gene_2_proteins:
                 dico_gene_2_proteins[gene_id] = []
-                dico_gene_2_proteins[gene_id].append(prot_name)
+                if not prot_name in dico_gene_2_proteins[gene_id] :
+                    dico_gene_2_proteins[gene_id].append(prot_name)
             else :
-                dico_gene_2_proteins[gene_id].append(prot_name)
+                if not prot_name in dico_gene_2_proteins[gene_id] :
+                    dico_gene_2_proteins[gene_id].append(prot_name)
             if prot_name in dico_prot_2_contig :
-                print("Skiping " + prot_name + " in "+contig+" because  it is already in "+dico_prot_2_contig[prot_name])
+                print("Skiping " + prot_name + " in "+contig+" because  it is already in "+dico_prot_2_contig[prot_name],file=sys.stderr)
             else :
                 dico_prot_2_contig[prot_name] = contig
             if not contig in dico_contig_2_synteny:
@@ -115,6 +126,7 @@ def processPositions(gff:str,
         index_gene = 0
         dico_index = {}
         for gene in dico_contig_2_synteny[contig]:
+            #print("DEBUG INDEX "+contig+" gene = "+gene+" name = "+dico_geneid_2genename[gene] +" index = "+str(index_gene))
             dico_index[gene] = index_gene
             index_gene +=1
         dico_contig_2_indexes[contig] = dico_index
@@ -125,82 +137,111 @@ dico_prot_2_gene = {}    # prot_name -> gene_id
 dico_contig_2_synteny = {} # contig -> arrayf of genes
 dico_contig_2_indexes = {} # contig -> dico gene-> index in array
 dico_gene_2_proteins = {} #  gene-> array of proteins
+dico_geneid_2genename = {} #  gene id > gene name
 
-processPositions(args.positions,dico_prot_2_contig,dico_prot_2_gene,dico_contig_2_synteny,dico_contig_2_indexes,dico_gene_2_proteins)                            
+print("Processing "+args.positions)
+processPositions(
+    args.positions,
+    dico_prot_2_contig,
+    dico_prot_2_gene,
+    dico_contig_2_synteny,
+    dico_contig_2_indexes,
+    dico_gene_2_proteins,
+    dico_geneid_2genename)        
+print("Done.")                    
 
+print("Processing "+args.cluster)
 dico_cluster = processCluster(args.cluster)
+print("Done.") 
+print("Processing "+args.stats)
 dico_stats = processStats(args.stats)
-
+print("Done.") 
 
 logfile=open(args.output+".log", 'w')
 outfile=open(args.output, 'w')
 outfile.write("SeqID")
-voisin = -nb_voisins + 1
+voisin = -nb_voisins 
 while(voisin < 0):
     outfile.write(";"+str(voisin))
     voisin +=1
 voisin = 1
-while(voisin < nb_voisins):
+while(voisin <= nb_voisins):
     outfile.write(";"+str(voisin))
     voisin +=1
 outfile.write("\n")
 
-outfilecheck=open(args.output+".check", 'w')
-outfilecheck.write("SeqID")
-voisin = -nb_voisins + 1
-while(voisin < 0):
-    outfilecheck.write(";"+str(voisin))
-    voisin +=1
-voisin = 1
-while(voisin < nb_voisins):
-    outfilecheck.write(";"+str(voisin))
-    voisin +=1
-outfilecheck.write("\n")
 
-
-
-logfile.write("PROCESSING PROTEINS\n")
-logfile.write("===================\n")
 with open(args.input, 'r') as reader:
     lines = reader.readlines()[1:]
     for line in lines:
         splitline = line.split(';')
         prot_name = splitline[1]
-        logfile.write("Processing "+ prot_name+"\n")
         print("Processing "+ prot_name)
+        logfile.write("Processing "+ prot_name+" : ")
         contig = dico_prot_2_contig[prot_name]
-        print("Contig = "+contig)
+        logfile.write("Contig = "+contig+" ")
         gene_id = dico_prot_2_gene[prot_name]
-        print("GeneID = "+gene_id)
+        logfile.write("GeneID = "+gene_id+" ")
+        gene_name = dico_geneid_2genename[gene_id]
+        logfile.write("Gene name = "+gene_name+" ")
         synteny = dico_contig_2_synteny[contig]
         indexes = dico_contig_2_indexes[contig]
 
         index = indexes[gene_id]
-        print("Index " + gene_id + " = "+str(index))
+        logfile.write("Index " + gene_id + " = "+str(index)+"\n")
         if synteny[index] != gene_id:
             sys.exit("error in index")
         left_genes = []
-        for voisin in  range(index - nb_voisins, index -1):
-            print(str(voisin))
+        print("Search for left genes")
+        for voisin in  range(index - nb_voisins, index ):
             if voisin >= 0 :
-                print("Gene id "+ synteny[voisin] )
                 left_genes.append(synteny[voisin])
             else :
                 left_genes.append("NO DATA")
-        print(left_genes)
 
+        right_genes = []   
+        print("Search for right genes")         
+        for voisin in  range(index + 1, index + nb_voisins + 1):
+            if voisin < len(synteny):
+                right_genes.append(synteny[voisin])
+            else :
+                right_genes.append("NO DATA")
 
-        proteins = list(map(lambda x: fun_gene_2_prot(dico_gene_2_proteins,x), left_genes))
-        print(proteins)
-        families = list(map(lambda x: fun_prot_2_fam(dico_cluster,x), proteins))
-        print(families)
-        unique_families = list(map(fun_unique_families, families))
-        print(unique_families)
-        largest_families = list(map(fun_largest_families, unique_families))
-        print(largest_families)
+        logfile.write("Left genes of ["+prot_name+"] = ")
+        for gid in left_genes:
+            if gid == "NO DATA":
+                logfile.write(gid +" ")
+            else:
+                logfile.write(gid +":"+dico_geneid_2genename[gid]+" ")
+        logfile.write("\n")
 
-        # get contig
-        
+        logfile.write("Right genes of ["+prot_name+"] = ")
+        for gid in right_genes:
+            if gid == "NO DATA":
+                logfile.write(gid +" ")
+            else:
+                logfile.write(gid +":"+dico_geneid_2genename[gid]+" ")
+        logfile.write("\n")
+
+        left_families = genes_2_families(left_genes,dico_gene_2_proteins,dico_cluster)
+        right_families = genes_2_families(right_genes,dico_gene_2_proteins,dico_cluster)
+
+        logfile.write("Left families of ["+prot_name+"] = ")
+        for fam in left_families:
+            logfile.write(fam+" ")
+        logfile.write("\n")
+
+        logfile.write("Right families of ["+prot_name+"] = ")
+        for fam in right_families:
+            logfile.write(fam+" ")
+        logfile.write("\n")
+
+        outfile.write(prot_name)
+        for family in left_families :
+            outfile.write(";"+str(family))
+        for family in right_families :
+                outfile.write(";"+str(family))    
+        outfile.write("\n")
 
 
 
