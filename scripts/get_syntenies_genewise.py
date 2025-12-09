@@ -211,68 +211,79 @@ with open(args.input, 'r') as reader:
                     unique_gene_ids.append(gene_id)
             print(unique_gene_ids)
             if len(unique_gene_ids) > 1:
-                sys.exit("Too many gene matches")
-            matching_gene_id = unique_gene_ids[0]
+                print("Warning  : the region covers multiple genes.")
+                logfile.write("Warning  : the region covers multiple genes.\n")
+
+            #matching_gene_id = unique_gene_ids[0]
             synteny = dico_contig_2_synteny[genewise_contig]
-            indexes = dico_contig_2_indexes[genewise_contig]
-            index = indexes[str(matching_gene_id)]
-            logfile.write("Index " + str(matching_gene_id) + " = "+str(index)+"\n")
-            gene_name = dico_geneid_2genename[str(matching_gene_id)]
-            logfile.write("Gene name = "+gene_name+"\n")
-            #to do check
-            left_genes = []
-            print("Search for left genes")
-            for voisin in  range(index - nb_voisins, index ):
-                if voisin >= 0 :
-                    left_genes.append(synteny[voisin])
-                else :
-                    left_genes.append("NO DATA")
+            indexes = dico_contig_2_indexes[genewise_contig]            
+            for matching_gene_id in unique_gene_ids :
+                index = indexes[str(matching_gene_id)]
+                logfile.write("Index " + str(matching_gene_id) + " = "+str(index)+"\n")
+                gene_name = dico_geneid_2genename[str(matching_gene_id)]
+                logfile.write("Gene name = "+gene_name+"\n")
+                #to do check
+                left_genes = []
+                print("Search for left genes")
+                for voisin in  range(index - nb_voisins, index ):
+                    if voisin >= 0 :
+                        left_genes.append(synteny[voisin])
+                    else :
+                        left_genes.append("NO DATA")
 
-            right_genes = []   
-            print("Search for right genes")         
-            for voisin in  range(index + 1, index + nb_voisins + 1):
-                if voisin < len(synteny):
-                    right_genes.append(synteny[voisin])
-                else :
-                    right_genes.append("NO DATA")
+                right_genes = []   
+                print("Search for right genes")         
+                for voisin in  range(index + 1, index + nb_voisins + 1):
+                    if voisin < len(synteny):
+                        right_genes.append(synteny[voisin])
+                    else :
+                        right_genes.append("NO DATA")
 
-            logfile.write("Left genes of ["+genewise_prot_name+"] = ")
-            for gid in left_genes:
-                if gid == "NO DATA":
-                    logfile.write(gid +" ")
-                else:
-                    logfile.write(gid +":"+dico_geneid_2genename[gid]+" ")
-            logfile.write("\n")
+                logfile.write("Left genes of ["+genewise_prot_name+"] = ")
+                for gid in left_genes:
+                    if gid == "NO DATA":
+                        logfile.write(gid +" ")
+                    else:
+                        logfile.write(gid +":"+dico_geneid_2genename[gid]+" ")
+                logfile.write("\n")
 
-            logfile.write("Right genes of ["+genewise_prot_name+"] = ")
-            for gid in right_genes:
-                if gid == "NO DATA":
-                    logfile.write(gid +" ")
-                else:
-                    logfile.write(gid +":"+dico_geneid_2genename[gid]+" ")
-            logfile.write("\n")
+                logfile.write("Right genes of ["+genewise_prot_name+"] = ")
+                for gid in right_genes:
+                    if gid == "NO DATA":
+                        logfile.write(gid +" ")
+                    else:
+                        logfile.write(gid +":"+dico_geneid_2genename[gid]+" ")
+                logfile.write("\n")
 
-            left_families = genes_2_families(left_genes,dico_gene_2_proteins,dico_cluster)
-            right_families = genes_2_families(right_genes,dico_gene_2_proteins,dico_cluster)
+                left_families = genes_2_families(left_genes,dico_gene_2_proteins,dico_cluster)
+                right_families = genes_2_families(right_genes,dico_gene_2_proteins,dico_cluster)
 
-            logfile.write("Left families of ["+genewise_prot_name+"] = ")
-            for fam in left_families:
-                logfile.write(fam+" ")
-            logfile.write("\n")
+                logfile.write("Left families of ["+genewise_prot_name+"] = ")
+                for fam in left_families:
+                    logfile.write(fam+" ")
+                logfile.write("\n")
 
-            logfile.write("Right families of ["+genewise_prot_name+"] = ")
-            for fam in right_families:
-                logfile.write(fam+" ")
-            logfile.write("\n")
+                logfile.write("Right families of ["+genewise_prot_name+"] = ")
+                for fam in right_families:
+                    logfile.write(fam+" ")
+                logfile.write("\n")
 
-            prot_names = list(df_selec['SeqID'])
-            for prot_name in prot_names:
-                outfile.write(genewise_prot_name+";"+prot_name)
-                for family in left_families :
-                    outfile.write(";"+str(family))
-                for family in right_families :
-                        outfile.write(";"+str(family))    
-                outfile.write("\n")
+
+                logfile.write("Matching region in gff:\n")
+                logfile.write(str(df_selec))
+                logfile.write("\n")
+                df_selec_gene  = df_selec[df_selec['GeneID'] == matching_gene_id ]
+                logfile.write("Regions associated to "+str(matching_gene_id) +":\n" )
+                logfile.write(str(df_selec_gene))
+                logfile.write("\n")
+                prot_names = list(df_selec_gene['SeqID'])
+                for prot_name in prot_names:
+                    outfile.write(genewise_prot_name+";"+prot_name)
+                    for family in left_families :
+                        outfile.write(";"+str(family))
+                    for family in right_families :
+                            outfile.write(";"+str(family))    
+                    outfile.write("\n")
 
         else :
             synteny = dico_contig_2_synteny[genewise_contig]
