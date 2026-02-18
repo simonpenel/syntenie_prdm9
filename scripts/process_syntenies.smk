@@ -31,7 +31,7 @@ ACCESSNB = config["assembly_list"]
 
 # Name of the resources directory. 
 # --------------------------------
-PROTEIN_RESOURCES_DIR_NAME  = config["protein_resources_dir_name"]
+PROTEIN_RESULTS_DIR_NAME = config["protein_results_dir_name"]
 
 # -----------------------------------------------
 # all : inputs define the to be files generated . 
@@ -44,7 +44,7 @@ rule all:
 #rule get_proteins_chromosome_info:
 #    input:
 #        summary = pathGTDriftData
-#        + "genome_assembly/{accession}/analyses/"+PROTEIN_RESOURCES_DIR_NAME + "whole_summary.csv",
+#        + "genome_assembly/{accession}/analyses/"+PROTEIN_RESULTS_DIR_NAME+ "whole_summary.csv",
 #        gff = pathGTDriftData + "genome_assembly/{accession}/annotation/genomic.gff", 
 #    output:
 #        "syntenie/{accession}/whole_summary_with_chromosomes.csv",
@@ -58,7 +58,7 @@ rule get_syntenies:
         famfile_csv="concatenated_proteomes.cluster.sorted.monogenic.csv",
         fam_stat_csv="concatenated_proteomes_fam_nb_seq_species.csv",
         summary = pathGTDriftData
-        + "genome_assembly/{accession}/analyses/"+PROTEIN_RESOURCES_DIR_NAME + "whole_summary.csv",
+        + "genome_assembly/{accession}/analyses/"+PROTEIN_RESULTS_DIR_NAME+ "whole_summary.csv",
         #gff = pathGTDriftData + "genome_assembly/{accession}/annotation/genomic.gff", 
         positions = "analyse_gff/analyse.{accession}.csv"
     output:
