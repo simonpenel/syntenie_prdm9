@@ -30,7 +30,7 @@ ACCESSNB = config["assembly_list"]
 
 # Name of the resources directory. 
 # --------------------------------
-PROTEIN_RESOURCES_DIR_NAME  = config["protein_resources_dir_name"]
+PROTEIN_RESULTS_DIR_NAME  = config["protein_results_dir_name"]
 
 
 
